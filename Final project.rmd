@@ -1,0 +1,126 @@
+
+```{r}
+#initialising data
+Datafile <- EnergyEfficiency
+```
+
+```{r}
+#converting numeric variables into categorical variables
+#finding the quantile of y1 and y2
+quantile(Datafile$Y1)
+quantile(Datafile$Y2)
+```
+```{r}
+#converting categories of Y1
+categories <- c("A", "B", "C", "D")
+ranges <- c(-Inf, 12.99,18.95, 31.67, Inf)
+Datafile$Y1 <- cut(Datafile$Y1, breaks = ranges, labels = categories, include.lowest = TRUE)
+
+#converting categories of Y2
+categories <- c("A", "B", "C", "D")
+ranges <- c(-Inf, 15.62, 22.08, 33.13, Inf)
+Datafile$Y2 <- cut(Datafile$Y2, breaks = ranges, labels = categories, include.lowest = TRUE)
+```
+
+
+```{r}
+#modifying the dataset after vif analysis
+Datafile <- subset(Datafile, select = c(X3, X6, X7,X8, Y1, Y2))
+head(Datafile)
+```
+
+
+```{r}
+#z-score standardization
+Datafile[,1:4] <- scale(Datafile[,1:4])
+```
+
+
+```{r}
+#partitioning the data
+set.seed(7)
+Datafile_index <- sample(nrow(Datafile_norm), 0.7*nrow(Datafile_norm))
+Datafile_train <- Datafile_norm[Datafile_index, 1:4]
+Datafile_test <- Datafile_norm[-Datafile_index, 1:4]
+```
+
+```{r}
+#creating a vector for two output variables
+Y1_train_labels <- Datafile[Datafile_index, "Y1", drop = TRUE]
+Y1_test_labels <- Datafile[-Datafile_index, "Y1", drop = TRUE]
+
+Y2_train_labels <- Datafile[Datafile_index, "Y2", drop = TRUE]
+Y2_test_labels <- Datafile[-Datafile_index, "Y2", drop = TRUE]
+```
+
+
+```{r}
+#installing knn packages
+#install.packages("class")
+library(class)
+```
+
+```{r}
+#running the knn model
+knn1 <- knn(train = Datafile_train, test = Datafile_test, cl = Y1_train_labels, k = 21)
+knn2 <- knn(train = Datafile_train, test = Datafile_test, cl = Y2_train_labels, k = 21)
+```
+
+```{r}
+#model preformance evaluation
+library(gmodels)
+table1 <- CrossTable(x = Y1_test_labels, y = knn1, prop.chisq = FALSE)
+table2 <- CrossTable(x = Y2_test_labels, y = knn2, prop.chisq = FALSE)
+```
+
+```{r}
+sum(diag(table1$prop.tbl))
+```
+```{r}
+sum(diag(table2$prop.tbl))
+```
+
+
+```{r}
+#Naive Bayes model
+library(e1071)
+set.seed(7)
+#converting output variable into factors
+Datafile$Y1 <- as.factor(Datafile$Y1)
+Datafile$Y2 <- as.factor(Datafile$Y2)
+```
+
+```{r}
+#Create training and testing data
+NB_index <- sample(nrow(Datafile), 0.7*nrow(Datafile))
+NB_train <- Datafile[NB_index, ]
+NB_test <- Datafile[-NB_index, ]
+```
+
+```{r}
+#Run Naive-Bayes Classifier
+NB_Model1 <- naiveBayes(Y1 ~ ., data=NB_train, laplace=1)
+NB_Model1
+
+NB_Model2 <- naiveBayes(Y2 ~ ., data=NB_train, laplace=1)
+NB_Model2
+```
+```{r}
+#Evaluate the model
+efficiency_pred1 <- predict(NB_Model1, NB_test, type="class")
+efficiency_pred_table1 <- table(NB_test$Y1, efficiency_pred1)
+efficiency_pred_table1
+
+efficiency_pred2 <- predict(NB_Model2, NB_test, type="class")
+efficiency_pred_table2 <- table(NB_test$Y2, efficiency_pred2)
+efficiency_pred_table2
+```
+
+```{r}
+#Calculate the accuracy
+sum(diag(efficiency_pred_table1)) / sum(efficiency_pred_table1)
+```
+```{r}
+sum(diag(efficiency_pred_table2)) / sum(efficiency_pred_table2)
+```
+
