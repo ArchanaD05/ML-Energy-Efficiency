@@ -1,4 +1,4 @@
-# 🏡 Energy Efficiency Modeling with Machine Learning 💡
+## 🏡 Energy Efficiency Modeling with Machine Learning 💡
 
 Welcome to my repository! This project is all about using **Machine Learning** to predict how much energy buildings need for **heating and cooling**. 🌡️ We explored several models to see which ones are best for helping design smarter, greener buildings. 🌿
 
